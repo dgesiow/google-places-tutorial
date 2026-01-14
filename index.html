@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Places CSV 系統建置教學</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .step-content { display: none; }
+        .step-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+    <div class="max-w-3xl mx-auto py-12 px-4">
+        <header class="text-center mb-12">
+            <h1 class="text-3xl font-bold text-blue-600 mb-2">Google Places CSV 查詢系統</h1>
+            <p class="text-gray-600">互動式建置與維護說明指南</p>
+        </header>
+
+        <div class="mb-8 bg-gray-200 rounded-full h-2.5">
+            <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 25%"></div>
+        </div>
+
+        <div id="step-container" class="bg-white shadow-lg rounded-lg p-8 mb-6">
+            
+            <div class="step-content active" id="step1">
+                <h2 class="text-xl font-semibold mb-4 text-blue-500">步驟 1：啟用 Places API</h2>
+                <ul class="list-decimal ml-5 space-y-2">
+                    <li>前往 <a href="https://console.cloud.google.com/" target="_blank" class="text-blue-600 underline">Google Cloud Console</a>。</li>
+                    <li>建立或選擇一個專案。</li>
+                    <li>在搜尋框搜尋「Places API」並點擊**啟用**。</li>
+                    <li>在「憑證」分頁建立 **API Key**，並複製下來。</li>
+                </ul>
+            </div>
+
+            <div class="step-content" id="step2">
+                <h2 class="text-xl font-semibold mb-4 text-blue-500">步驟 2：建立 GAS 專案與金鑰設定</h2>
+                <ul class="list-decimal ml-5 space-y-2">
+                    <li>開啟 Google 雲端硬碟，新增一個 **Google Apps Script** 專案。</li>
+                    <li>點選左側齒輪 ⚙️ **專案設定**。</li>
+                    <li>在「指令碼屬性」新增一組：<br>
+                        <code class="bg-gray-100 p-1 rounded text-red-500 font-bold">GOOGLE_PLACES_API_KEY</code> = 你的金鑰值。
+                    </li>
+                </ul>
+            </div>
+
+            <div class="step-content" id="step3">
+                <h2 class="text-xl font-semibold mb-4 text-blue-500">步驟 3：貼上後端與前端程式碼</h2>
+                <p class="mb-4 text-sm text-gray-500">點擊下方按鈕即可複製專案所需的程式碼內容：</p>
+                <div class="space-y-4">
+                    <button onclick="copyToClipboard('code-gs')" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition w-full">一鍵複製 Code.gs 程式碼</button>
+                    <button onclick="copyToClipboard('index-html')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition w-full">一鍵複製 Index.html 程式碼</button>
+                </div>
+                <p class="mt-4 text-sm italic">※ 記得在 GAS 左側按「+」新增 HTML 檔案，並命名為 Index。</p>
+            </div>
+
+            <div class="step-content" id="step4">
+                <h2 class="text-xl font-semibold mb-4 text-blue-500">步驟 4：發布為網頁應用程式</h2>
+                <ul class="list-decimal ml-5 space-y-2">
+                    <li>點選右上角「部署」→「新增部署」。</li>
+                    <li>類型選「網頁應用程式」。</li>
+                    <li>執行身分：<strong>我</strong>。</li>
+                    <li>存取權限：<strong>知道連結的人</strong>。</li>
+                    <li>完成後，使用產生的 URL 即可進入查詢網頁。</li>
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="flex justify-between">
+            <button id="prevBtn" onclick="changeStep(-1)" class="bg-gray-300 text-gray-700 px-6 py-2 rounded disabled:opacity-50" disabled>上一步</button>
+            <button id="nextBtn" onclick="changeStep(1)" class="bg-blue-600 text-white px-6 py-2 rounded">下一步</button>
+        </div>
+    </div>
+
+    <textarea id="code-gs" class="hidden">function doGet() {  return HtmlService.createHtmlOutputFromFile('Index')    .setTitle('Google Places CSV 查詢')    .addMetaTag('viewport', 'width=device-width, initial-scale=1');}function searchPlacesCSV(keyword, lat, lng, radius) {  const apiKey = PropertiesService.getScriptProperties().getProperty('GOOGLE_PLACES_API_KEY'); if (!apiKey) { throw new Error('尚未設定 GOOGLE_PLACES_API_KEY'); } const baseUrl = 'https://maps.googleapis.com/maps/api/place/textsearch/json'; const seen = new Set(); const rows = []; rows.push(['名稱', '緯度', '經度', '評分', '地址', '類型', '用戶評分總數']); const keywordNorm = String(keyword).trim(); let pageToken = null; let loopCount = 0; do { let url = `${baseUrl}?query=${encodeURIComponent(keywordNorm)}&location=${lat},${lng}&radius=${radius}&language=zh-TW&key=${apiKey}`; if (pageToken) { url += `&pagetoken=${pageToken}`; Utilities.sleep(2000); } const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true }); const json = JSON.parse(response.getContentText()); if (json.status !== 'OK' && json.status !== 'ZERO_RESULTS') break; (json.results || []).forEach(p => { const name = p.name || ''; if (!name.includes(keywordNorm)) return; if (!seen.has(p.place_id)) { seen.add(p.place_id); rows.push([ name, p.geometry?.location?.lat ?? '', p.geometry?.location?.lng ?? '', p.rating ?? '', p.formatted_address || '', (p.types || []).join('|'), p.user_ratings_total ?? '' ]); } }); pageToken = json.next_page_token; loopCount++; } while (pageToken && loopCount < 3); const csv = rows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',') ).join('\n'); return csv;}</textarea>
+    
+    <textarea id="index-html" class="hidden"><!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8"><title>Google Places CSV 查詢</title></head><body><h1>查詢 Google Places 並輸出 CSV</h1><form id="searchForm"><label>關鍵字：<input type="text" id="keyword" required></label><br><label>經緯度（lat,lng）：<input type="text" id="coords" placeholder="24.75,121.74" required></label><br><label>距離（公尺）：<input type="number" id="radius" required></label><br><br><button type="submit">查詢並下載 CSV</button></form><hr><div id="message"></div><script>document.getElementById('searchForm').addEventListener('submit', function(e) { e.preventDefault(); const keyword = document.getElementById('keyword').value; const coords = document.getElementById('coords').value.split(','); const radius = document.getElementById('radius').value; const messageDiv = document.getElementById('message'); if (coords.length < 2) { messageDiv.textContent = '請輸入正確的經緯度格式'; return; } const lat = coords[0].trim(); const lng = coords[1].trim(); messageDiv.textContent = '查詢中，請稍候…'; google.script.run.withSuccessHandler(function(csv) { const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'places_results.csv'; a.click(); URL.revokeObjectURL(url); messageDiv.textContent = '完成，已下載 CSV'; }).withFailureHandler(function(err) { messageDiv.textContent = '錯誤：' + err.message; }).searchPlacesCSV(keyword, lat, lng, radius); });</script></body></html></textarea>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        function changeStep(delta) {
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            currentStep += delta;
+            document.getElementById(`step${currentStep}`).classList.add('active');
+
+            // 更新 UI
+            document.getElementById('progress-bar').style.width = `${(currentStep / totalSteps) * 100}%`;
+            document.getElementById('prevBtn').disabled = currentStep === 1;
+            document.getElementById('nextBtn').innerText = currentStep === totalSteps ? '完成' : '下一步';
+            
+            if (currentStep > totalSteps) {
+                alert('恭喜完成建置！');
+                location.reload();
+            }
+        }
+
+        function copyToClipboard(elementId) {
+            const copyText = document.getElementById(elementId);
+            copyText.select();
+            document.execCommand("copy");
+            alert("代碼已複製到剪貼簿！");
+        }
+    </script>
+</body>
+</html>
