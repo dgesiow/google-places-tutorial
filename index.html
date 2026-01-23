@@ -5,216 +5,356 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Places CSV 系統建置教學</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; }
         .step-content { display: none; }
         .step-content.active { display: block; }
-        .code-block { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; font-family: monospace; font-size: 0.875rem; line-height: 1.5; max-height: 300px; }
+        .code-block { background: #0f172a; color: #e2e8f0; padding: 1.25rem; border-radius: 0.75rem; overflow-x: auto; font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; max-height: 400px; border: 1px solid #334155; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 font-sans">
-    <div class="max-w-4xl mx-auto py-10 px-4">
-        <header class="text-center mb-10">
-            <h1 class="text-3xl font-extrabold text-indigo-700 mb-2">Google Places CSV 查詢系統</h1>
-            <p class="text-slate-500">互動式建置指南：從零開始部署您的查詢工具</p>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+    <div class="max-w-4xl mx-auto py-12 px-6">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-extrabold text-indigo-700 mb-3">Google Places CSV 查詢系統</h1>
+            <div class="inline-block px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold mb-4">版本 3.0：支援多點搜尋與去重</div>
+            <p class="text-slate-500">按照以下步驟，快速部署您的地圖地標蒐集工具</p>
         </header>
 
-        <div id="intro-section" class="bg-white shadow-xl rounded-2xl p-8 mb-8 border border-slate-200">
-            <h2 class="text-2xl font-bold mb-4 text-slate-800">1. 系統預覽與範例</h2>
-            <div class="grid md:grid-cols-2 gap-6">
+        <div id="intro-section" class="bg-white shadow-2xl rounded-3xl p-10 mb-8 border border-slate-200">
+            <h2 class="text-2xl font-bold mb-6 text-slate-800 underline decoration-indigo-300 decoration-4">1. 系統演示與成果</h2>
+            <div class="grid md:grid-cols-2 gap-8">
                 <div class="space-y-4">
-                    <p class="font-semibold text-indigo-600">🔗 官方演示網址：</p>
-                    <a href="https://script.google.com/a/macros/gapp.ylsh.ilc.edu.tw/s/AKfycbxeAdd4WlQRk5P4Wawg67yLaDI2z5U3ESrxdbh2BBEoq3-kEhDBORIYwtZcfSgU0yvr/exec" target="_blank" class="block p-3 bg-slate-100 rounded-lg text-blue-600 break-all underline text-sm">點此開啟示範網頁</a>
+                    <p class="font-bold text-indigo-600 italic">🔗 系統示範網址：</p>
+                    <a href="https://script.google.com/a/macros/gapp.ylsh.ilc.edu.tw/s/AKfycbwR1Ys4NTeBwc-OG2goQyZ3tVuXNcXFTUVlp_qnmpP9RGQVE_OH2MkAAV8XIBjTh5TSOw/exec" target="_blank" class="block p-4 bg-slate-50 border border-indigo-100 rounded-xl text-blue-600 break-all underline text-sm hover:bg-blue-50 transition">點此開啟示範網頁</a>
                 </div>
-                <div class="space-y-2">
-                    <p class="font-semibold text-emerald-600">📊 輸出結果 (CSV) 範例：</p>
-                    <div class="text-xs bg-slate-800 text-slate-300 p-3 rounded-lg font-mono">
+                <div class="space-y-4">
+                    <p class="font-bold text-emerald-600 italic">📊 CSV 輸出內容範例：</p>
+                    <div class="text-xs bg-slate-900 text-slate-300 p-4 rounded-xl font-mono leading-relaxed shadow-inner">
                         "名稱","緯度","經度","評分","地址","類型","用戶評分總數"<br>
-                        "宜蘭高中",24.75,121.74,4.5,"宜蘭縣宜蘭市復興路三段8號","school",150
+                        "宜蘭高中",24.75,121.74,4.5,"宜蘭縣宜蘭市復興路三段8號","school",150<br>
+                        "星巴克宜蘭店",24.75,121.75,4.2,"宜蘭縣宜蘭市...","cafe",420
                     </div>
                 </div>
             </div>
-            <button onclick="startTutorial()" class="mt-8 w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg">開始實際安裝步驟 →</button>
+            <button onclick="startTutorial()" class="mt-10 w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-indigo-700 transition transform hover:-translate-y-1 shadow-xl">
+                開始進行實際安裝 <i class="fa-solid fa-arrow-right ml-2"></i>
+            </button>
         </div>
 
         <div id="tutorial-section" class="hidden">
-            <div class="mb-6 bg-slate-200 rounded-full h-2">
-                <div id="progress-bar" class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: 20%"></div>
+            <div class="mb-8 bg-slate-200 rounded-full h-3">
+                <div id="progress-bar" class="bg-indigo-600 h-3 rounded-full transition-all duration-700" style="width: 20%"></div>
             </div>
 
-            <div id="step-container" class="bg-white shadow-xl rounded-2xl p-8 mb-6 border border-slate-200">
+            <div id="step-container" class="bg-white shadow-2xl rounded-3xl p-10 mb-8 border border-slate-100">
                 
                 <div class="step-content active" id="step1">
-                    <h3 class="text-xl font-bold mb-4 flex items-center"><span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-full inline-flex items-center justify-center mr-2 text-sm">1</span> 取得 Google Places API Key</h3>
-                    <p class="text-slate-600 mb-4">請先至 <a href="https://console.cloud.google.com/" target="_blank" class="text-indigo-600 underline">Google Cloud Console</a> 啟用 **Places API** 並建立一個 API 金鑰。這將作為系統搜尋地標的憑證。</p>
+                    <h3 class="text-2xl font-bold mb-6 flex items-center text-indigo-800"><span class="bg-indigo-600 text-white w-10 h-10 rounded-full inline-flex items-center justify-center mr-4 shadow-lg">1</span> 取得 Google Places API Key</h3>
+                    <div class="space-y-4 text-slate-600">
+                        <p>1. 前往 <a href="https://console.cloud.google.com/" target="_blank" class="text-indigo-600 underline font-bold">Google Cloud Console</a>。</p>
+                        <p>2. 點選「啟用 API 服務」，搜尋並啟用 <span class="bg-amber-100 px-2 rounded text-amber-800 font-bold">Places API</span>。</p>
+                        <p>3. 在「憑證」分頁點選「建立憑證」→「API 金鑰」，並將該金鑰複製妥當。</p>
+                    </div>
                 </div>
 
                 <div class="step-content" id="step2">
-                    <h3 class="text-xl font-bold mb-4 flex items-center"><span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-full inline-flex items-center justify-center mr-2 text-sm">2</span> 設定指令碼屬性</h3>
-                    <p class="text-slate-600 mb-2">在 Google Apps Script 專案中，點選左側 **⚙️ 專案設定**，新增以下屬性：</p>
-                    <div class="bg-slate-50 p-4 rounded-lg border font-mono text-sm">
-                        <span class="text-indigo-700 font-bold">GOOGLE_PLACES_API_KEY</span> = <span class="text-slate-400">您的金鑰值</span>
+                    <h3 class="text-2xl font-bold mb-6 flex items-center text-indigo-800"><span class="bg-indigo-600 text-white w-10 h-10 rounded-full inline-flex items-center justify-center mr-4 shadow-lg">2</span> 指令碼屬性詳細設定</h3>
+                    <p class="text-slate-600 mb-6 italic leading-relaxed">這是最關鍵的一步，請依照下圖指示在 Google Apps Script 專案中完成設定：</p>
+                    
+                    <div class="bg-slate-50 border-2 border-dashed border-slate-300 p-6 rounded-2xl space-y-6">
+                        <div class="flex items-start space-x-4 text-sm">
+                            <div class="flex-1 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                                <p class="font-bold text-slate-800 mb-2 underline">欄位：屬性 (Property)</p>
+                                <code class="text-indigo-700 font-bold text-base">GOOGLE_PLACES_API_KEY</code>
+                            </div>
+                            <div class="flex-1 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                                <p class="font-bold text-slate-800 mb-2 underline">欄位：值 (Value)</p>
+                                <code class="text-slate-400 italic text-sm">貼上您的金鑰，例如：</code><br>
+                                <code class="text-emerald-600 font-bold text-xs break-all">AIzaSyA6Xv6T_Example_Key_2024_GAS_V3</code>
+                            </div>
+                        </div>
+                        <div class="bg-indigo-900 text-indigo-100 p-4 rounded-xl text-xs leading-relaxed">
+                            <i class="fa-solid fa-circle-info mr-2 text-amber-400"></i> 設定路徑：左側側邊欄的 ⚙️ <b>專案設定</b> > 拉到最下方的 <b>指令碼屬性</b> > 點選 <b>新增指令碼屬性</b>。
+                        </div>
                     </div>
                 </div>
 
                 <div class="step-content" id="step3">
-                    <h3 class="text-xl font-bold mb-4 flex items-center"><span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-full inline-flex items-center justify-center mr-2 text-sm">3</span> 貼上後端程式碼 (Code.gs)</h3>
-                    <p class="text-slate-600 mb-4">請將 GAS 專案中 `Code.gs` 的內容替換為：</p>
+                    <h3 class="text-2xl font-bold mb-6 flex items-center text-indigo-800"><span class="bg-indigo-600 text-white w-10 h-10 rounded-full inline-flex items-center justify-center mr-4 shadow-lg">3</span> 貼上後端程式碼 (Code.gs)</h3>
+                    <p class="text-slate-600 mb-4 font-medium text-sm">此版本支援「多座標去重」與「交集/聯集」搜尋邏輯：</p>
                     <div class="relative group">
-                        <button onclick="copyCode('code-gs-text')" class="absolute right-4 top-4 bg-indigo-600 text-white px-3 py-1 rounded text-xs hover:bg-indigo-700">複製</button>
-                        <pre class="code-block" id="code-gs-display"></pre>
+                        <button onclick="copyCode('code-gs-text')" class="absolute right-4 top-4 bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 z-10 transition shadow-lg">複製 Code.gs</button>
+                        <pre class="code-block shadow-inner" id="code-gs-display"></pre>
                     </div>
                 </div>
 
                 <div class="step-content" id="step4">
-                    <h3 class="text-xl font-bold mb-4 flex items-center"><span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-full inline-flex items-center justify-center mr-2 text-sm">4</span> 貼上前端程式碼 (Index.html)</h3>
-                    <p class="text-slate-600 mb-4">在 GAS 點擊 `+` 新增一個 HTML 檔案，命名為 **Index**，並貼上：</p>
+                    <h3 class="text-2xl font-bold mb-6 flex items-center text-indigo-800"><span class="bg-indigo-600 text-white w-10 h-10 rounded-full inline-flex items-center justify-center mr-4 shadow-lg">4</span> 貼上前端程式碼 (Index.html)</h3>
+                    <p class="text-slate-600 mb-4 font-medium text-sm">更新後的介面與說明文字，請新增 Index.html 檔案並貼入：</p>
                     <div class="relative group">
-                        <button onclick="copyCode('index-html-text')" class="absolute right-4 top-4 bg-emerald-600 text-white px-3 py-1 rounded text-xs hover:bg-emerald-700">複製</button>
-                        <pre class="code-block" id="index-html-display"></pre>
+                        <button onclick="copyCode('index-html-text')" class="absolute right-4 top-4 bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-700 z-10 transition shadow-lg">複製 Index.html</button>
+                        <pre class="code-block shadow-inner" id="index-html-display"></pre>
                     </div>
                 </div>
 
                 <div class="step-content" id="step5">
-                    <h3 class="text-xl font-bold mb-4 flex items-center"><span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-full inline-flex items-center justify-center mr-2 text-sm">5</span> 完成部署</h3>
-                    <p class="text-slate-600 mb-4">點擊「部署」→「新增部署」，選擇「網頁應用程式」。</p>
-                    <ul class="list-disc ml-6 text-slate-600 space-y-2">
-                        <li>執行身分：我</li>
-                        <li>存取權限：知道連結的人</li>
-                    </ul>
+                    <h3 class="text-2xl font-bold mb-6 flex items-center text-indigo-800"><span class="bg-indigo-600 text-white w-10 h-10 rounded-full inline-flex items-center justify-center mr-4 shadow-lg">5</span> 完成部署 (Web App)</h3>
+                    <div class="space-y-4">
+                        <p class="text-slate-700 font-bold">點擊右上角「部署」 > 「新增部署」：</p>
+                        <ul class="space-y-3">
+                            <li class="flex items-center bg-slate-50 p-3 rounded-lg border border-slate-200"><i class="fa-solid fa-check-circle text-indigo-500 mr-3"></i> 類型選擇：<span class="font-bold ml-1">網頁應用程式</span></li>
+                            <li class="flex items-center bg-slate-50 p-3 rounded-lg border border-slate-200"><i class="fa-solid fa-check-circle text-indigo-500 mr-3"></i> 執行身分：<span class="font-bold ml-1">我</span></li>
+                            <li class="flex items-center bg-slate-50 p-3 rounded-lg border border-slate-200"><i class="fa-solid fa-check-circle text-indigo-500 mr-3"></i> 誰有權存取：<span class="font-bold ml-1">所有人 / 知道連結的人</span></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
-            <div class="flex justify-between">
-                <button id="prevBtn" onclick="changeStep(-1)" class="bg-slate-200 text-slate-600 px-6 py-2 rounded-xl font-bold disabled:opacity-0 transition">上一步</button>
-                <button id="nextBtn" onclick="changeStep(1)" class="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg">下一步</button>
+            <div class="flex justify-between items-center px-4">
+                <button id="prevBtn" onclick="changeStep(-1)" class="bg-slate-200 text-slate-600 px-8 py-3 rounded-2xl font-bold disabled:opacity-0 transition hover:bg-slate-300">上一步</button>
+                <div class="text-slate-400 font-mono text-sm">STEP <span id="stepNum">1</span> / 5</div>
+                <button id="nextBtn" onclick="changeStep(1)" class="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-xl shadow-indigo-200">下一步</button>
             </div>
         </div>
     </div>
 
-    <textarea id="code-gs-text" class="hidden">function doGet() {
+    <textarea id="code-gs-text" class="hidden">
+function doGet() {
   return HtmlService.createHtmlOutputFromFile('Index')
-    .setTitle('Google Places CSV 查詢')
+    .setTitle('Google Places CSV 查詢系統')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
-function searchPlacesCSV(keyword, lat, lng, radius) {
-  const apiKey = PropertiesService
-    .getScriptProperties()
-    .getProperty('GOOGLE_PLACES_API_KEY');
-
-  if (!apiKey) {
-    throw new Error('尚未設定 GOOGLE_PLACES_API_KEY');
-  }
+function searchPlacesCSV(keyword, coordsArray, radius, city) {
+  const apiKey = PropertiesService.getScriptProperties().getProperty('GOOGLE_PLACES_API_KEY');
+  if (!apiKey) throw new Error('尚未設定 GOOGLE_PLACES_API_KEY');
 
   const baseUrl = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
-  const seen = new Set();
+  const seen = new Set(); // 跨點去重核心
   const rows = [];
-
-  // CSV 表頭（固定順序）
   rows.push(['名稱', '緯度', '經度', '評分', '地址', '類型', '用戶評分總數']);
 
+  const fullQuery = city ? city + " " + keyword : keyword;
   const keywordNorm = String(keyword).trim();
-  let pageToken = null;
-  let loopCount = 0;
 
-  do {
-    let url =
-      `${baseUrl}?query=${encodeURIComponent(keywordNorm)}` +
-      `&location=${lat},${lng}` +
-      `&radius=${radius}` +
-      `&language=zh-TW` +
-      `&key=${apiKey}`;
+  // 處理多個中心點輸入
+  coordsArray.forEach(([lat, lng]) => {
+    let pageToken = null;
+    let loopCount = 0;
 
-    if (pageToken) {
-      url += `&pagetoken=${pageToken}`;
-      Utilities.sleep(2000);
-    }
-
-    const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
-    const json = JSON.parse(response.getContentText());
-
-    if (json.status !== 'OK' && json.status !== 'ZERO_RESULTS') break;
-
-    (json.results || []).forEach(p => {
-      const name = p.name || '';
-      if (!name.includes(keywordNorm)) return;
-
-      if (!seen.has(p.place_id)) {
-        seen.add(p.place_id);
-        rows.push([
-          name,
-          p.geometry?.location?.lat ?? '',
-          p.geometry?.location?.lng ?? '',
-          p.rating ?? '',
-          p.formatted_address || '',
-          (p.types || []).join('|'),
-          p.user_ratings_total ?? ''
-        ]);
+    do {
+      let url = `${baseUrl}?query=${encodeURIComponent(fullQuery)}&location=${lat},${lng}&radius=${radius}&language=zh-TW&key=${apiKey}`;
+      if (pageToken) {
+        url += `&pagetoken=${pageToken}`;
+        Utilities.sleep(2000); 
       }
-    });
 
-    pageToken = json.next_page_token;
-    loopCount++;
-  } while (pageToken && loopCount < 3);
+      const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+      const json = JSON.parse(response.getContentText());
+      if (json.status !== 'OK' && json.status !== 'ZERO_RESULTS') break;
 
-  const csv = rows.map(row =>
-    row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
-  ).join('\n');
+      (json.results || []).forEach(p => {
+        const name = p.name || '';
+        let isMatch = false;
 
-  return csv;
+        // 邏輯判斷: AND / OR
+        if (keywordNorm.includes('&')) {
+          const kws = keywordNorm.split('&').map(k => k.trim()).filter(k => k !== "");
+          isMatch = kws.every(k => name.includes(k));
+        } else if (keywordNorm.includes(',')) {
+          const kws = keywordNorm.split(',').map(k => k.trim()).filter(k => k !== "");
+          isMatch = kws.some(k => name.includes(k));
+        } else {
+          isMatch = name.includes(keywordNorm);
+        }
+
+        if (isMatch && !seen.has(p.place_id)) {
+          seen.add(p.place_id);
+          rows.push([
+            name,
+            p.geometry?.location?.lat ?? '',
+            p.geometry?.location?.lng ?? '',
+            p.rating ?? '',
+            p.formatted_address || '',
+            (p.types || []).join('|'),
+            p.user_ratings_total ?? ''
+          ]);
+        }
+      });
+
+      pageToken = json.next_page_token;
+      loopCount++;
+    } while (pageToken && loopCount < 3);
+  });
+
+  return rows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
 }</textarea>
 
-    <textarea id="index-html-text" class="hidden"><!DOCTYPE html>
+    <textarea id="index-html-text" class="hidden">
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>Google Places CSV 查詢</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Places CSV 查詢系統</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+    body { font-family: 'Noto Sans TC', sans-serif; }
+    .loader { border-top-color: #3498db; animation: spinner 1.5s linear infinite; }
+    @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
 </head>
-<body>
-  <h1>查詢 Google Places 並輸出 CSV</h1>
-  <form id="searchForm">
-    <label>關鍵字：
-      <input type="text" id="keyword" required>
-    </label><br>
-    <label>經緯度（lat,lng）：
-      <input type="text" id="coords" placeholder="24.75,121.74" required>
-    </label><br>
-    <label>距離（公尺）：
-      <input type="number" id="radius" required>
-    </label><br><br>
-    <button type="submit">查詢並下載 CSV</button>
-  </form>
-  <hr>
-  <div id="message"></div>
+<body class="bg-slate-50 min-h-screen">
+
+  <div class="max-w-5xl mx-auto px-4 py-10">
+    <div class="text-center mb-10">
+      <h1 class="text-4xl font-extrabold text-indigo-900 mb-3">
+        <i class="fa-solid fa-map-marked-alt text-indigo-600 mr-2"></i>Google Places CSV 查詢系統
+      </h1>
+      <p class="text-slate-500 font-medium">搜尋GooleMap地圖地標、過濾條件並快速導出經緯度座標點CSV報表</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <div class="lg:col-span-4 space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm p-6 border-l-4 border-indigo-500">
+          <h2 class="text-lg font-bold mb-4 text-slate-800"><i class="fa-solid fa-keyboard text-indigo-500 mr-2"></i>關鍵字指令說明</h2>
+          <div class="space-y-4 text-sm text-slate-600">
+            <div class="bg-indigo-50 p-3 rounded-lg">
+              <p class="font-bold text-indigo-700">交集 (AND)：使用 "&"</p>
+              <p class="mt-1 font-mono text-xs">範例：星巴克 & 宜蘭</p>
+              <p class="text-[11px] mt-1 italic text-slate-400">名稱需同時符合所有條件</p>
+            </div>
+            <div class="bg-emerald-50 p-3 rounded-lg">
+              <p class="font-bold text-emerald-700">聯集 (OR)：使用 ","</p>
+              <p class="mt-1 font-mono text-xs">範例：7-11 , 全家</p>
+              <p class="text-[11px] mt-1 italic text-slate-400">名稱符合其中之一即可</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm p-6 border-l-4 border-slate-300">
+          <h2 class="text-lg font-bold mb-2 text-slate-800"><i class="fa-solid fa-circle-info text-slate-400 mr-2"></i>溫馨提示</h2>
+          <ul class="text-xs text-slate-500 space-y-2 list-disc ml-4">
+            <li>座標格式請輸入「緯度, 經度」。</li>
+            <li>可先至googleMap，在搜尋範圍的地圖中心按下右鍵可複製座標。</li>
+            <li>搜尋半徑最大限制為 50,000 公尺。</li>
+            <li>若選填縣市，系統會自動在關鍵字前加上縣市名以增加精準度。</li>
+            <li>避免網路攻擊，同電腦每分鐘只限查詢一次。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="lg:col-span-8">
+        <div class="bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
+          <form id="searchForm" class="space-y-6">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-slate-700 font-bold mb-2 text-sm">搜尋縣市 (選填)</label>
+                <select id="city" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition bg-slate-50">
+                  <option value="">-- 全台灣 (不限) --</option>
+                  <option value="臺北市">臺北市</option><option value="新北市">新北市</option>
+                  <option value="桃園市">桃園市</option><option value="臺中市">臺中市</option>
+                  <option value="臺南市">臺南市</option><option value="高雄市">高雄市</option>
+                  <option value="宜蘭縣">宜蘭縣</option><option value="花蓮縣">花蓮縣</option>
+                  <option value="臺東縣">臺東縣</option><option value="澎湖縣">澎湖縣</option>
+                  <option value="金門縣">金門縣</option><option value="連江縣">連江縣</option>
+                  <option value="基隆市">基隆市</option><option value="新竹市">新竹市</option>
+                  <option value="新竹縣">新竹縣</option><option value="苗栗縣">苗栗縣</option>
+                  <option value="彰化縣">彰化縣</option><option value="南投縣">南投縣</option>
+                  <option value="雲林縣">雲林縣</option><option value="嘉義縣">嘉義縣</option>
+                  <option value="嘉義市">嘉義市</option><option value="屏東縣">屏東縣</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-slate-700 font-bold mb-2 text-sm">搜尋關鍵字</label>
+                <input type="text" id="keyword" placeholder="輸入關鍵字..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition" required>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <label class="block text-slate-700 font-bold text-sm">中心點座標 (可輸入 A、B、C 三處座標進行一次搜尋)</label>
+              <input type="text" id="coord1" placeholder="中心點 A (例如：24.75, 121.74)" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition" required>
+              <input type="text" id="coord2" placeholder="中心點 B (選填)" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+              <input type="text" id="coord3" placeholder="中心點 C (選填)" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+            </div>
+
+            <div>
+              <label class="block text-slate-700 font-bold mb-2 text-sm">搜尋半徑 (公尺)</label>
+              <input type="number" id="radius" value="5000" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition" required>
+            </div>
+
+            <button type="submit" id="submitBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-200 transition-all transform active:scale-[0.98]">
+              <i class="fa-solid fa-file-csv mr-2"></i>執行多點搜尋並匯出 CSV
+            </button>
+          </form>
+
+          <div id="statusArea" class="mt-8 hidden animate-pulse">
+            <div class="flex items-center justify-center p-4 rounded-xl bg-slate-100 border border-slate-200 text-slate-600">
+              <div id="spinner" class="loader ease-linear rounded-full border-2 border-t-2 border-slate-300 h-5 w-5 mr-3"></div>
+              <span id="message" class="text-sm font-medium">系統查詢中，請稍候...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     document.getElementById('searchForm').addEventListener('submit', function(e) {
       e.preventDefault();
+      const city = document.getElementById('city').value;
       const keyword = document.getElementById('keyword').value;
-      const coords = document.getElementById('coords').value.split(',');
       const radius = document.getElementById('radius').value;
-      const messageDiv = document.getElementById('message');
-      if (coords.length < 2) {
-        messageDiv.textContent = '請輸入正確的經緯度格式';
+      const submitBtn = document.getElementById('submitBtn');
+      const statusArea = document.getElementById('statusArea');
+      
+      const rawCoords = [
+        document.getElementById('coord1').value,
+        document.getElementById('coord2').value,
+        document.getElementById('coord3').value
+      ].filter(v => v.trim() !== "");
+
+      const coordsArray = rawCoords.map(str => {
+        const parts = str.split(',');
+        return parts.length === 2 ? [parts[0].trim(), parts[1].trim()] : null;
+      }).filter(v => v !== null);
+
+      if (coordsArray.length === 0) {
+        alert('請至少在 A 欄位輸入正確的座標格式！');
         return;
       }
-      const lat = coords[0].trim();
-      const lng = coords[1].trim();
-      messageDiv.textContent = '查詢中，請稍候…';
+
+      submitBtn.disabled = true;
+      submitBtn.classList.add('opacity-50');
+      statusArea.classList.remove('hidden');
+
       google.script.run
         .withSuccessHandler(function(csv) {
-          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+          const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = 'places_results.csv';
+          a.download = `GooglePlaces_Multi_${keyword}.csv`;
           a.click();
           URL.revokeObjectURL(url);
-          messageDiv.textContent = '完成，已下載 CSV';
+          statusArea.classList.add('hidden');
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-50');
+          alert('下載完成！');
         })
         .withFailureHandler(function(err) {
-          messageDiv.textContent = '錯誤：' + err.message;
+          alert('錯誤：' + err.message);
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-50');
+          statusArea.classList.add('hidden');
         })
-        .searchPlacesCSV(keyword, lat, lng, radius);
+        .searchPlacesCSV(keyword, coordsArray, radius, city);
     });
   </script>
 </body>
@@ -225,8 +365,8 @@ function searchPlacesCSV(keyword, lat, lng, radius) {
         const totalSteps = 5;
 
         // 初始化顯示原始碼
-        document.getElementById('code-gs-display').textContent = document.getElementById('code-gs-text').value;
-        document.getElementById('index-html-display').textContent = document.getElementById('index-html-text').value;
+        document.getElementById('code-gs-display').textContent = document.getElementById('code-gs-text').value.trim();
+        document.getElementById('index-html-display').textContent = document.getElementById('index-html-text').value.trim();
 
         function startTutorial() {
             document.getElementById('intro-section').classList.add('hidden');
@@ -244,6 +384,7 @@ function searchPlacesCSV(keyword, lat, lng, radius) {
             }
 
             document.getElementById(`step${currentStep}`).classList.add('active');
+            document.getElementById('stepNum').innerText = currentStep;
             document.getElementById('progress-bar').style.width = `${(currentStep / totalSteps) * 100}%`;
             document.getElementById('prevBtn').disabled = currentStep === 1;
             document.getElementById('nextBtn').innerText = currentStep === totalSteps ? '完成建置' : '下一步';
